@@ -1,4 +1,3 @@
-const os = require('os')
 const { setHeadlessWhen } = require('@codeceptjs/configure')
 const packageConfig = require('./package.json')
 
@@ -66,7 +65,7 @@ const config = {
   },
   multiple: {
     sacue: {
-      chunks: os.cpus() - 1,
+      chunks: 3,
       browsers: [
         {
           browser: 'chrome',
