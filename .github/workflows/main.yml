@@ -1,0 +1,147 @@
+name: main
+on:
+  pull_request:
+    branches: ["**"]
+jobs:
+  deploy_heroku:
+    name: Deploly heroku review app
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      HEROKU_API_TOKEN: ${{secrets.HEROKU_API_TOKEN}}
+      HEROKU_PIPELINE_ID: ${{secrets.HEROKU_PIPELINE_ID}}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy heroku review app
+        uses: mheap/github-action-pr-heroku-review-app@master
+  static_and_unit_test:
+    name: Static test and unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint test
+        run: npm run ci-lint
+      - name: Unit test
+        run: npm run ci-test
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lint-output
+          path: lint.log
+      - uses: actions/upload-artifact@v2
+        with:
+          name: unit-test-output
+          path: ./reports
+  functional_test:
+    needs: [deploy_heroku, static_and_unit_test]
+    name: Functional test
+    runs-on: ubuntu-latest
+    env:
+      SAUCE_USERNAME: sky172839465
+      SAUCE_ACCESS_KEY: ${{secrets.SAUCE_ACCESS_KEY}}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: "8"
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+      - name: Get heroku review app
+        id: heroku_app_info
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { getHerokuReviewApp } = require('./scripts/heroku-helper')
+            const reviewApp = await getHerokuReviewApp({ context })
+            core.exportVariable('HEROKU_APP_URL', reviewApp)
+      - name: Run functional test on saucelabs
+        run: |
+          echo HEROKU_APP_URL=${{env.HEROKU_APP_URL}}
+          npm run ci-functional
+      - name: Generate functional test allure report
+        run: npm run functional:generate-report
+      - uses: actions/upload-artifact@v2
+        with:
+          name: functional-test-output
+          path: ./output
+      - name: Get report info
+        if: ${{ always() }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { getGHPageInfo } = require('./scripts/ghpage-helper')
+            const info = await getGHPageInfo({ context })
+            core.exportVariable('E2E_REPORT_DIR', `./${info.destination_dir}`)
+      - name: Upload report to GitHub page
+        if: ${{ always() }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./e2e-reports
+          destination_dir: ${{ env.E2E_REPORT_DIR }}
+          commit_message: "docs: 🤖 upload pr report ${{ github.event.head_commit.message }}"
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+  clean_up:
+    needs: [functional_test]
+    name: Clean up
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: lint-output
+      - uses: actions/download-artifact@v2
+        with:
+          name: unit-test-output
+          path: ./reports
+      - uses: actions/download-artifact@v2
+        with:
+          name: functional-test-output
+          path: ./output
+      - name: Get report info
+        if: ${{ always() }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { getGHPageInfo } = require('./scripts/ghpage-helper')
+            const info = await getGHPageInfo({ context })
+            console.log(info)
+            core.exportVariable('GH_PAGE_URL', info.ghPage)
+      - name: Get build comment
+        id: get_build_comment
+        if: ${{ always() }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const getComment = require('./scripts/get-comment')
+            const comment = await getComment({ context })
+            console.log(comment)
+            return comment
+          result-encoding: string
+      - name: Comment build result
+        if: ${{ always() }}
+        uses: peter-evans/commit-comment@v1
+        with:
+          body: ${{ steps.get_build_comment.outputs.result }}

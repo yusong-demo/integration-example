@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="2" failures="0" errors="0" time="2.532">
+  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2021-05-01T17:13:02" time="1.591" tests="1">
+    <testcase classname=" renders learn react link 2" name=" renders learn react link 2" time="0.029">
+    </testcase>
+  </testsuite>
+  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2021-05-01T17:13:02" time="1.591" tests="1">
+    <testcase classname=" renders learn react link" name=" renders learn react link" time="0.029">
+    </testcase>
+  </testsuite>
+</testsuites>
