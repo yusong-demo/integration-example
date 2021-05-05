@@ -130,7 +130,6 @@ jobs:
             console.log(info)
             core.exportVariable('GH_PAGE_URL', info.ghPage)
       - name: Get build comment
-        id: get_build_comment
         if: ${{ always() }}
         uses: actions/github-script@v4
         with:
@@ -138,10 +137,19 @@ jobs:
             const getComment = require('./scripts/get-comment')
             const comment = await getComment({ context })
             console.log(comment)
-            return comment
+            core.exportVariable('BUILD_COMMENT', comment)
           result-encoding: string
       - name: Comment build result
         if: ${{ always() }}
         uses: peter-evans/commit-comment@v1
         with:
-          body: ${{ steps.get_build_comment.outputs.result }}
+          body: ${{ env.BUILD_COMMENT }}
+      - name: Last check build status
+        if: ${{ always() }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            if (process.env.BUILD_COMMENT.includes('❌')) {
+              console.error('Job failed.')
+              process.exit(1)
+            }
