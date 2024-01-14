@@ -1,20 +1,24 @@
 name: main
 on:
-  schedule:
-    - cron: "0 10 * * 1"
+  # schedule:
+  #   - cron: "0 10 * * 1"
   pull_request:
     types: [opened, reopened, synchronize, closed]
+  workflow_dispatch:
+
 permissions:
   actions: write
   contents: write
   pull-requests: write
   id-token: write
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   deploy_flyio:
     name: Deploly fly.io review app
-    if: github.event.action != 'closed'
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
     runs-on: ubuntu-latest
     outputs:
       FLY_IO_URL: ${{ steps.deploy.outputs.url }}
@@ -33,6 +37,41 @@ jobs:
         uses: superfly/fly-pr-review-apps@1.2.0
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy_gh_page:
+    name: Deploly github.io review app
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    outputs:
+      FLY_IO_URL: ${{ steps.deploy.outputs.url }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: "./build"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
 
   static_and_unit_test:
     name: Static test and unit test
@@ -73,7 +112,7 @@ jobs:
           path: ./reports
 
   functional_test:
-    needs: [deploy_flyio]
+    needs: [deploy_flyio, deploy_gh_page]
     name: Functional test
     runs-on: ubuntu-latest
     env:
@@ -99,7 +138,7 @@ jobs:
 
       - name: Run functional test on saucelabs
         env:
-          FLY_IO_URL: ${{needs.deploy_flyio.outputs.FLY_IO_URL}}
+          FLY_IO_URL: ${{ needs.deploy_flyio.outputs.FLY_IO_URL || needs.deploy_gh_page.outputs.FLY_IO_URL }}
         run: |
           echo FLY_IO_URL=$FLY_IO_URL
           npm run ci-functional
@@ -133,7 +172,7 @@ jobs:
           user_email: "github-actions[bot]@users.noreply.github.com"
 
   clean_up:
-    needs: [deploy_flyio, functional_test]
+    needs: [deploy_flyio, deploy_gh_page, functional_test]
     name: Clean up
     runs-on: ubuntu-latest
     steps:
@@ -176,13 +215,16 @@ jobs:
         with:
           script: |
             const getComment = require('./scripts/get-comment')
-            const comment = await getComment({ context }, '${{needs.deploy_flyio.outputs.FLY_IO_URL}}')
+            const comment = await getComment(
+              { context },
+              '${{ needs.deploy_flyio.outputs.FLY_IO_URL || needs.deploy_gh_page.outputs.FLY_IO_URL }}'
+            )
             console.log(comment)
             core.exportVariable('BUILD_COMMENT', comment)
           result-encoding: string
 
       - name: Comment build result to pr
-        if: ${{ github.event_name != 'schedule' && always() }}
+        if: ${{ always() && github.event_name == 'pull_request' }}
         uses: unsplash/comment-on-pr@master
         with:
           msg: ${{ env.BUILD_COMMENT }}
@@ -190,7 +232,7 @@ jobs:
           delete_prev_regex_msg: "Build Result"
 
       - name: Comment build result to issue
-        if: ${{ github.event_name == 'schedule' && always() }}
+        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
         uses: peter-evans/create-or-update-comment@v3
         with:
           token: ${{ secrets.SOURCE_TREE_PROTECTED_BRANCH_TOKEN }}
@@ -210,7 +252,7 @@ jobs:
 
   delete_develpoment:
     name: Delete Develpoment
-    if: ${{ github.event.action == 'closed' || github.event_name == 'schedule' }}
+    if: ${{ github.event.action == 'closed' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
