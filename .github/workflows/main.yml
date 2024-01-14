@@ -1,7 +1,7 @@
 name: main
 on:
   pull_request:
-    types: [opened, reopened, synchronize, closed]
+    types: [opened, reopened, synchronize]
 permissions:
   actions: write
   contents: write
@@ -12,7 +12,6 @@ env:
 jobs:
   deploy_flyio:
     name: Deploly fly.io review app
-    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     outputs:
       FLY_IO_URL: ${{ steps.deploy-pr.outputs.url }}
@@ -104,6 +103,9 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run functional test on saucelabs
         env:
@@ -206,15 +208,3 @@ jobs:
               console.error('Job failed.')
               process.exit(1)
             }
-
-  delete_develpoment:
-    name: Delete Develpoment
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clean up GitHub environment
-        uses: strumwolf/delete-deployment-environment@v2
-        with:
-          # ⚠️ The provided token needs permission for admin write:org
-          token: ${{ secrets.GITHUB_TOKEN }}
-          environment: pr-${{ github.event.number }}
