@@ -9,7 +9,6 @@ jobs:
   bump-version:
     name: "Bump Version"
     runs-on: ubuntu-latest
-    needs: [check-coding-style]
     steps:
       - name: "Checkout source code"
         uses: "actions/checkout@v4"
