@@ -1,7 +1,7 @@
 name: main
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, closed]
 permissions:
   actions: write
   contents: write
@@ -12,6 +12,7 @@ env:
 jobs:
   deploy_flyio:
     name: Deploly fly.io review app
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     outputs:
       FLY_IO_URL: ${{ steps.deploy-pr.outputs.url }}
@@ -208,3 +209,26 @@ jobs:
               console.error('Job failed.')
               process.exit(1)
             }
+
+  delete_develpoment:
+    name: Delete Develpoment
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Points to a recent commit instead of `main` to avoid supply chain attacks. (The latest tag is very old.)
+      - name: 🎟 Get GitHub App token
+        uses: navikt/github-app-token-generator@a3831f44404199df32d8f39f7c0ad9bb8fa18b1c
+        id: get-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: 🗑 Delete deployment environment
+        uses: strumwolf/delete-deployment-environment@v2.2.3
+        with:
+          # Use a JWT created with your GitHub App's private key
+          token: ${{ steps.get-token.outputs.token }}
+          environment: pr-${{ github.event.number }}
+          ref: ${{ github.ref_name }}
