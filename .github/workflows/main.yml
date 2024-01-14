@@ -12,6 +12,7 @@ env:
 jobs:
   deploy_flyio:
     name: Deploly fly.io review app
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     outputs:
       FLY_IO_URL: ${{ steps.deploy-pr.outputs.url }}
@@ -32,6 +33,13 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         if: ${{ github.event_name == 'pull_request' }}
 
+      # - name: Comment URL on PR
+      #   uses: unsplash/comment-on-pr@master
+      #   if: ${{ github.event_name == 'pull_request' }}
+      #   with:
+      #     msg: ${{ steps.deploy-pr.outputs.url }}
+      #     check_for_duplicate_msg: true
+
       # - name: Set fly.io url
       #   id: set-url
       #   run: |
@@ -39,6 +47,7 @@ jobs:
 
   static_and_unit_test:
     name: Static test and unit test
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -130,6 +139,7 @@ jobs:
           commit_message: "docs: 🤖 upload pr report ${{ github.event.head_commit.message }}"
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
+
   clean_up:
     needs: [deploy_flyio, functional_test]
     name: Clean up
@@ -196,3 +206,15 @@ jobs:
               console.error('Job failed.')
               process.exit(1)
             }
+
+  delete_develpoment:
+    name: Delete Develpoment
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clean up GitHub environment
+        uses: strumwolf/delete-deployment-environment@v2
+        with:
+          # ⚠️ The provided token needs permission for admin write:org
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: pr-${{ github.event.number }}
