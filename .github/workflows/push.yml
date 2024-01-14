@@ -23,6 +23,6 @@ jobs:
         uses: "phips28/gh-action-bump-version@master"
         with:
           version-type: "minor"
-          target-branch: "main"
+          target-branch: "master"
           tag-prefix: "v"
           commit-message: "ci: bumps version to {{version}} [skip ci]"
