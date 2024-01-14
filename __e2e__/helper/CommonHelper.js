@@ -34,7 +34,7 @@ class CommonHelper extends Helper {
     const helper = this._getHelper()
     let url = FLY_IO_URL || 'http://localhost:3000'
     if (isSelenoid) {
-      url = 'http://test.local.com:3000'
+      url = 'http://192.168.0.101:3000'
     }
     console.log('url', url)
     helper.amOnPage(url)
