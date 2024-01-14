@@ -22,5 +22,6 @@ This project demo front-end visualizes test results to improve development flow 
 
 - launch docker desktop
   - (`FIRST TIME ONLY`)
+  - npm run selenoid:download
 - npm run selenoid-ui:start
 - access http://localhost:8080/#/capabilities/
