@@ -1,92 +1,132 @@
 name: main
 on:
   pull_request:
-    branches: ["**"]
+    types: [opened, reopened, synchronize, closed]
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  id-token: write
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
-  deploy_heroku:
-    name: Deploly heroku review app
+  deploy_flyio:
+    name: Deploly fly.io review app
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      HEROKU_API_TOKEN: ${{secrets.HEROKU_API_TOKEN}}
-      HEROKU_PIPELINE_ID: ${{secrets.HEROKU_PIPELINE_ID}}
+    outputs:
+      FLY_IO_URL: ${{ steps.deploy-pr.outputs.url }}
+    environment:
+      name: pr-${{ github.event.number }}
+      url: ${{ steps.deploy-pr.outputs.url }}
+    # Only run one deployment at a time per PR.
     steps:
-      - uses: actions/checkout@v2
-      - name: Deploy heroku review app
-        uses: mheap/github-action-pr-heroku-review-app@master
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
+      - uses: actions/checkout@v4
+
+      - name: Deploy PR
+        id: deploy-pr
+        uses: superfly/fly-pr-review-apps@1.2.0
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        if: ${{ github.event_name == 'pull_request' }}
+
+      # - name: Comment URL on PR
+      #   uses: unsplash/comment-on-pr@master
+      #   if: ${{ github.event_name == 'pull_request' }}
+      #   with:
+      #     msg: ${{ steps.deploy-pr.outputs.url }}
+      #     check_for_duplicate_msg: true
+
+      # - name: Set fly.io url
+      #   id: set-url
+      #   run: |
+      #     echo "url=${{steps.deploy-pr.outputs.url}}" >> "$GITHUB_OUTPUT"
+
   static_and_unit_test:
     name: Static test and unit test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
+
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}
+
       - name: Install dependencies
         run: npm ci
+
       - name: Lint test
         run: npm run ci-lint
+
       - name: Unit test
         run: npm run ci-test
-      - uses: actions/upload-artifact@v2
+
+      - uses: actions/upload-artifact@v3
         with:
           name: lint-output
           path: lint.log
-      - uses: actions/upload-artifact@v2
+
+      - uses: actions/upload-artifact@v3
         with:
           name: unit-test-output
           path: ./reports
+
   functional_test:
-    needs: [deploy_heroku, static_and_unit_test]
+    needs: [deploy_flyio]
     name: Functional test
     runs-on: ubuntu-latest
     env:
       SAUCE_USERNAME: sky172839465
       SAUCE_ACCESS_KEY: ${{secrets.SAUCE_ACCESS_KEY}}
     steps:
-      - uses: actions/checkout@v2
-      - uses: joschi/setup-jdk@v2
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
         with:
-          java-version: "8"
+          distribution: "temurin"
+          java-version: "17"
+
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}
-      - name: Get heroku review app
-        id: heroku_app_info
-        uses: actions/github-script@v4
-        with:
-          script: |
-            const { getHerokuReviewApp } = require('./scripts/heroku-helper')
-            const reviewApp = await getHerokuReviewApp({ context })
-            core.exportVariable('HEROKU_APP_URL', reviewApp)
+
       - name: Run functional test on saucelabs
+        env:
+          FLY_IO_URL: ${{needs.deploy_flyio.outputs.FLY_IO_URL}}
         run: |
-          echo HEROKU_APP_URL=${{env.HEROKU_APP_URL}}
+          echo FLY_IO_URL=$FLY_IO_URL
           npm run ci-functional
+
       - name: Generate functional test allure report
         run: npm run functional:generate-report
-      - uses: actions/upload-artifact@v2
+
+      - uses: actions/upload-artifact@v3
         with:
           name: functional-test-output
           path: ./output
+
       - name: Get report info
         if: ${{ always() }}
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         with:
           script: |
             const { getGHPageInfo } = require('./scripts/ghpage-helper')
             const info = await getGHPageInfo({ context })
             core.exportVariable('E2E_REPORT_DIR', `./${info.destination_dir}`)
+
       - name: Upload report to GitHub page
         if: ${{ always() }}
         uses: peaceiris/actions-gh-pages@v3
@@ -98,58 +138,76 @@ jobs:
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
   clean_up:
-    needs: [functional_test]
+    needs: [deploy_flyio, functional_test]
     name: Clean up
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}
-      - uses: actions/download-artifact@v2
+
+      - uses: actions/download-artifact@v3
         with:
           name: lint-output
-      - uses: actions/download-artifact@v2
+
+      - uses: actions/download-artifact@v3
         with:
           name: unit-test-output
           path: ./reports
-      - uses: actions/download-artifact@v2
+
+      - uses: actions/download-artifact@v3
         with:
           name: functional-test-output
           path: ./output
+
       - name: Get report info
         if: ${{ always() }}
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         with:
           script: |
             const { getGHPageInfo } = require('./scripts/ghpage-helper')
             const info = await getGHPageInfo({ context })
             console.log(info)
             core.exportVariable('GH_PAGE_URL', info.ghPage)
+
       - name: Get build comment
         if: ${{ always() }}
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         with:
           script: |
             const getComment = require('./scripts/get-comment')
-            const comment = await getComment({ context })
+            const comment = await getComment({ context }, '${{needs.deploy_flyio.outputs.FLY_IO_URL}}')
             console.log(comment)
             core.exportVariable('BUILD_COMMENT', comment)
           result-encoding: string
+
       - name: Comment build result
         if: ${{ always() }}
-        uses: peter-evans/commit-comment@v1
+        uses: unsplash/comment-on-pr@master
         with:
-          body: ${{ env.BUILD_COMMENT }}
+          msg: ${{ env.BUILD_COMMENT }}
+          check_for_duplicate_msg: true
+          delete_prev_regex_msg: "Build Result"
+
       - name: Last check build status
         if: ${{ always() }}
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         with:
           script: |
             if (process.env.BUILD_COMMENT.includes('❌')) {
               console.error('Job failed.')
               process.exit(1)
             }
+
+      - name: Clean up GitHub environment
+        uses: strumwolf/delete-deployment-environment@v2
+        if: ${{ github.event.action == 'closed' }}
+        with:
+          # ⚠️ The provided token needs permission for admin write:org
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: pr-${{ github.event.number }}

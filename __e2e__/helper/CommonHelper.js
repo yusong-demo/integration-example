@@ -29,13 +29,14 @@ class CommonHelper extends Helper {
   }
 
   amOnMySite () {
-    const { HEROKU_APP_URL } = process.env
+    const { FLY_IO_URL } = process.env
     const { isSelenoid } = this.getEnv()
     const helper = this._getHelper()
-    let url = HEROKU_APP_URL || 'http://localhost:3000'
+    let url = FLY_IO_URL || 'http://localhost:3000'
     if (isSelenoid) {
       url = 'http://test.local.com:3000'
     }
+    console.log('url', url)
     helper.amOnPage(url)
   }
 

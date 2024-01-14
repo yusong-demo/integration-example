@@ -7,8 +7,9 @@
 
 # testing
 /coverage
-/reports
 /output
+/bin
+/reports
 
 # production
 /build

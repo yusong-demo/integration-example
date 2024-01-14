@@ -25,8 +25,11 @@ class SauceLabsHelper extends CommonHelper {
 
   _before () {
     const allure = this._getAllure()
-    const { browserName } = this._getBrowser().capabilities
-    allure.addLabel('browserName', browserName)
+    const {
+      platform = 'unknown',
+      browserName = 'unknown'
+    } = this._getBrowser().capabilities
+    allure.addLabel('browserName', `${platform}-${browserName}`)
   }
 
   _setSauceJob (test, isSuccess) {
