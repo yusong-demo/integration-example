@@ -1,3 +1,5 @@
+app = "test-integration-example"
+
 # https://github.com/fly-apps/hello-create-react-app/blob/main/fly.toml
 kill_signal = "SIGINT"
 kill_timeout = 5
