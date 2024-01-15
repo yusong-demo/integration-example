@@ -4,6 +4,11 @@ const _ = require('lodash')
 const unitTest = require('./unit-test')
 const funcTest = require('./functional-test')
 
+const {
+  TEST_URL,
+  DATE
+} = process.env
+
 const STATUS = {
   PASSED: '✅',
   FAILED: '❌'
@@ -79,7 +84,7 @@ const getFuncStatus = async () => {
   return `${status} ${passedTests} passed, ${failedTests} failed, ${totalTests} total tests.`
 }
 
-const getComment = async ({ context = {} }, flyUrl) => {
+const getComment = async ({ context = {} }) => {
   const repo = _.get(context, 'payload.repository.html_url')
   const runId = _.get(context, 'runId')
   const buildUrl = `${repo}/actions/runs/${runId}`
@@ -97,9 +102,10 @@ const getComment = async ({ context = {} }, flyUrl) => {
   - Lint test: ${lintStatus}
   - Unit test: ${unitStatus}
   - Functional test: ${funcStatus}
-  - Functional test url: ${flyUrl}
+  - Functional test url: ${TEST_URL}
   - Functional report: ${functionalTestReport}
   - Full build result: ${buildUrl}
+  - Date: ${DATE}
 
   `
 }

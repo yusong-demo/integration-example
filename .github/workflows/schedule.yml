@@ -1,4 +1,4 @@
-name: Test every week monday
+name: Schedule testing
 on:
   schedule:
     - cron: "0 2 * * 3,6"
@@ -138,14 +138,20 @@ jobs:
             const info = await getGHPageInfo({ context }, '${{ github.sha }}')
             console.log(info)
             core.exportVariable('GH_PAGE_URL', info.ghPage)
+      - id: get-date
+        run: |
+          echo "DATE=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
 
       - name: Get build comment
         if: ${{ always() }}
         uses: actions/github-script@v6
+        env:
+          TEST_URL: ${{ env.TEST_URL }}
+          DATE: ${{ steps.get-date.outputs.DATE }}
         with:
           script: |
             const getComment = require('./scripts/get-comment')
-            const comment = await getComment({ context }, '${{ env.TEST_URL }}')
+            const comment = await getComment({ context })
             console.log(comment)
             core.exportVariable('BUILD_COMMENT', comment)
           result-encoding: string
