@@ -1,4 +1,4 @@
-name: Schedule testing
+name: schedule testing
 on:
   schedule:
     - cron: "0 2 * * 3,6"

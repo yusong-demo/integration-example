@@ -1,0 +1,42 @@
+name: garbage collection
+on:
+  # pull_request:
+  #   types: [opened, reopened, synchronize]
+  # https://crontab.guru/#0_1_1_*_*
+  schedule:
+    - cron: "0 1 1 * *"
+permissions:
+  actions: write
+  contents: write
+  id-token: write
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+  garbage_collection:
+    name: Remove old build result on GH page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - id: remove
+        run: |
+          echo "OLD_FOLDERS=$(git ls-tree -r --name-only gh-pages@{30.days.ago} | cut -d/ -f1 | uniq)"
+          if [ -n "$OLD_FOLDERS" ]; then
+            rm -r $OLD_FOLDERS
+            git add .
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git commit -m "docs: 🤖 garbage collection old build results"
+            echo "result=1" >> $GITHUB_OUTPUT
+          else
+            echo "result=''" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        if: ${{ steps.remove.outputs.OLD_FOLDERS != '' }}
+        with:
+          github_token: ${{ env.GITHUB_TOKEN }}
+          branch: gh-pages

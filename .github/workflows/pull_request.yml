@@ -1,4 +1,4 @@
-name: main
+name: pull request
 on:
   pull_request:
     types: [opened, reopened, synchronize, closed]
