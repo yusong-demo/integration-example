@@ -73,9 +73,11 @@ jobs:
         run: npm ci
 
       - name: Run functional test on saucelabs
+        env:
+          FLY_IO_URL: ${{ env.TEST_URL }}
         run: |
-          echo FLY_IO_URL=${{ env.TEST_URL }}
-          FLY_IO_URL=$FLY_IO_URL npm run ci-functional
+          echo FLY_IO_URL=$FLY_IO_URL
+          npm run ci-functional
 
       - name: Generate functional test allure report
         run: npm run functional:generate-report
