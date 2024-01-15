@@ -8,6 +8,7 @@ permissions:
   id-token: write
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  TEST_URL: https://test-integration-example.fly.dev
 jobs:
   static_and_unit_test:
     name: Static test and unit test
@@ -73,7 +74,7 @@ jobs:
 
       - name: Run functional test on saucelabs
         run: |
-          echo FLY_IO_URL=https://test-integration-example.fly.dev
+          echo FLY_IO_URL=${{ env.TEST_URL }}
           npm run ci-functional
 
       - name: Generate functional test allure report
@@ -142,7 +143,7 @@ jobs:
         with:
           script: |
             const getComment = require('./scripts/get-comment')
-            const comment = await getComment({ context }, '${{needs.deploy_flyio.outputs.FLY_IO_URL}}')
+            const comment = await getComment({ context }, '${{ env.TEST_URL }}')
             console.log(comment)
             core.exportVariable('BUILD_COMMENT', comment)
           result-encoding: string
