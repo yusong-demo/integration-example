@@ -133,7 +133,7 @@ jobs:
         with:
           script: |
             const { getGHPageInfo } = require('./scripts/ghpage-helper')
-            const info = await getGHPageInfo({ context })
+            const info = await getGHPageInfo({ context }, '${{ github.sha }}')
             console.log(info)
             core.exportVariable('GH_PAGE_URL', info.ghPage)
 
