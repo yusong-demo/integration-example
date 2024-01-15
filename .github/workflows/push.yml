@@ -1,12 +1,12 @@
-name: "Bump Version"
+name: "Release"
 
 on:
   push:
     branches:
       - "master"
 jobs:
-  bump-version:
-    name: "Bump Version"
+  release:
+    name: "Release new version"
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout source code"
@@ -28,16 +28,6 @@ jobs:
           target-branch: "master"
           tag-prefix: "v"
           commit-message: "ci: bumps version to {{version}} [skip ci]"
-
-  deploy:
-    name: Deploy app
-    needs: [bump-version]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - uses: actions/checkout@v4
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
