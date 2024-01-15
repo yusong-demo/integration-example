@@ -207,8 +207,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Delete pr app
+        id: deploy
+        uses: superfly/fly-pr-review-apps@1.2.0
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       - name: 🗑 Delete deployment environment
         uses: strumwolf/delete-deployment-environment@v2.2.3
         with:
           token: ${{ secrets.SOURCE_TREE_PROTECTED_BRANCH_TOKEN }}
-          environment: pr-${{ github.event.number }}-${{ github.repository_owner }}-integration-example
+          environment: pr-${{ github.event.number }}
