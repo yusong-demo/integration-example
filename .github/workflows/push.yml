@@ -14,8 +14,10 @@ jobs:
         with:
           ref: ${{ github.ref }}
           token: ${{ secrets.SOURCE_TREE_PROTECTED_BRANCH_TOKEN }}
+
       - name: "cat package.json"
         run: cat ./package.json
+
       - name: "Automated Version Bump"
         id: version-bump
         uses: "phips28/gh-action-bump-version@master"
@@ -26,3 +28,19 @@ jobs:
           target-branch: "master"
           tag-prefix: "v"
           commit-message: "ci: bumps version to {{version}} [skip ci]"
+
+  deploy:
+    name: Deploy app
+    needs: [bump-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
