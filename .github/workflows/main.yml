@@ -208,5 +208,5 @@ jobs:
         uses: strumwolf/delete-deployment-environment@v2.2.3
         with:
           token: ${{ secrets.SOURCE_TREE_PROTECTED_BRANCH_TOKEN }}
-          environment: pr-${{ github.event.number }}
+          environment: pr-${{ github.event.number }}-${{ github.repository_owner }}-integration-example
           ref: ${{ github.ref_name }}
