@@ -1,6 +1,6 @@
 # integration-example
 
-## [![Build](https://github.com/sky172839465/integration-example/actions/workflows/push.yml/badge.svg)](https://github.com/sky172839465/integration-example/actions/workflows/push.yml)
+[![release](https://github.com/sky172839465/integration-example/actions/workflows/release.yml/badge.svg)](https://github.com/sky172839465/integration-example/actions/workflows/release.yml)
 
 When CI/CD testing gets into trouble, how can we debug faster?
 
