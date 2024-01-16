@@ -10,8 +10,8 @@ This project demo front-end visualizes test results to improve development flow1
 
 ### Skip pr & release build
 
-- pr title with `[skip ci]`
-- exmaple: https://github.com/sky172839465/integration-example/pull/35
+- pr last commit with `[skip ci]`
+- exmaple: https://github.com/sky172839465/integration-example/pull/39
 
 ---
 
