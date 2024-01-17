@@ -38,5 +38,4 @@ jobs:
 
       - env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl launch --yes --verbose
-
+        run: flyctl deploy --remote-only
