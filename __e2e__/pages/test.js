@@ -7,5 +7,5 @@ Scenario('test localhost content', async ({ I }) => {
   I.click('#btn')
   const resultSelector = '#result'
   I.waitForVisible(resultSelector)
-  I.see('Hello wworld', resultSelector)
+  I.see('Hello world', resultSelector)
 })
