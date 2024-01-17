@@ -1,0 +1,22 @@
+name: Manual destroy fly.io app
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'app name to destroy'
+        default: 'https://pr-41-sky172839465-integration-example.fly.dev'
+        required: true
+        type: string
+
+jobs:
+  Destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Destroy app ${{ inputs.app }}"
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl apps destroy ${{ inputs.app }} --verbose
