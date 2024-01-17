@@ -19,4 +19,4 @@ jobs:
 
       - env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl apps destroy ${{ inputs.app }} --verbose
+        run: flyctl apps destroy ${{ inputs.app }} --yes --verbose
