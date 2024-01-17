@@ -4,7 +4,14 @@
 
 When CI/CD testing gets into trouble, how can we debug faster?
 
-This project demo front-end visualizes test results to improve development flow123.
+This project demo front-end visualizes test results to improve development flow.
+
+---
+
+### Installation
+
+- docker deskop<br />
+  https://www.docker.com/products/docker-desktop/
 
 ---
 
@@ -32,3 +39,18 @@ This project demo front-end visualizes test results to improve development flow1
   - npm run selenoid:download
 - npm run selenoid-ui:start
 - access http://localhost:8080/#/capabilities/
+
+---
+
+### Document
+
+- CodeceptJS<br />
+  https://codecept.io/quickstart/
+- SauceLabs<br />
+  https://docs.saucelabs.com/overview/
+- Selenoid<br />
+  https://aerokube.com/selenoid/latest/
+- GitHub Actions<br />
+  https://docs.github.com/en/actions/quickstart
+- Fly.io<br />
+  https://fly.io/docs/
