@@ -1,16 +1,21 @@
-name: manual destroy fly.io app
+name: manual fly.io app
 
 on:
   workflow_dispatch:
     inputs:
       app:
-        description: 'app name to destroy'
+        description: 'app name'
         default: 'pr-41-sky172839465-integration-example'
         required: true
         type: string
+      isDestroy:
+        description: 'is destroy or create app'
+        required: true
+        type: boolean
 
 jobs:
   Destroy:
+    if: inputs.isDestroy
     runs-on: ubuntu-latest
     steps:
       - run: echo "Destroy app ${{ inputs.app }}"
@@ -20,3 +25,18 @@ jobs:
       - env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: flyctl apps destroy ${{ inputs.app }} --yes --verbose
+
+  Create:
+    if: ${{ !inputs.isDestroy }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Create app ${{ inputs.app }}"
+
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl launch --yes --verbose
+
