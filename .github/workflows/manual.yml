@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: 'app name'
-        default: 'pr-41-sky172839465-integration-example'
+        description: "app name"
+        default: "pr-41-sky172839465-integration-example"
         required: true
         type: string
       isDestroy:
-        description: 'isDestoryApp'
+        description: "isDestoryApp"
         required: true
         type: boolean
 
