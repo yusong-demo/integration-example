@@ -9,7 +9,7 @@ on:
         required: true
         type: string
       isDestroy:
-        description: 'is destroy or create app'
+        description: 'isDestoryApp'
         required: true
         type: boolean
 
@@ -38,4 +38,4 @@ jobs:
 
       - env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl launch --remote-only --yes --verbose
+        run: flyctl deploy --remote-only --yes --verbose
