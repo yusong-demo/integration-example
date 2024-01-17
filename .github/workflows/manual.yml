@@ -1,11 +1,11 @@
-name: Manual destroy fly.io app
+name: manual destroy fly.io app
 
 on:
   workflow_dispatch:
     inputs:
       app:
         description: 'app name to destroy'
-        default: 'https://pr-41-sky172839465-integration-example.fly.dev'
+        default: 'pr-41-sky172839465-integration-example'
         required: true
         type: string
 
