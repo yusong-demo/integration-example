@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import logo from './logo.svg'
 import './App.css'
 
 function App() {
+  const [visible, setVisible] = useState(false)
+
   return (
     <div className='App'>
       <header className='App-header'>
@@ -21,6 +24,12 @@ function App() {
             {process.env.REACT_APP_VERSION}
           </p>
         </a>
+        <div>
+          <button id='btn' onClick={() => setVisible(!visible)}>setVisible</button>
+          {visible && (
+            <p id='result'>Hello world</p>
+          )}
+        </div>
       </header>
     </div>
   )

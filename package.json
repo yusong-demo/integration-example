@@ -1,6 +1,6 @@
 {
   "name": "integration-example",
-  "version": "1.24.0",
+  "version": "1.28.0",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
@@ -72,7 +72,7 @@
     "\n# FUNCTIONAL TEST SCRIPTS": "",
     "functional": "npm run clean:functional && codeceptjs",
     "functional:sauce": "cross-env RUNNER=SAUCE node ./scripts/run-with-sc functional -- run-multiple sacue --steps --plugins allure",
-    "functional:selenoid": "cross-env RUNNER=SELENOID npm-run-all selenoid:stop selenoid:run 'functional -- run-workers 2 --plugins allure' selenoid:stop",
+    "functional:selenoid": "cross-env RUNNER=SELENOID TEST_URL=http://192.168.0.101:3000 npm-run-all selenoid:stop selenoid:run 'functional -- run-workers 2 --plugins allure' selenoid:stop",
     "functional:report-preview": "allure serve ./output ./output/*",
     "functional:generate-report": "allure generate ./output ./output/* -o ./e2e-reports",
     "\n# CI SCRIPTS": "",

@@ -15,11 +15,10 @@ jobs:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     outputs:
-      FLY_IO_URL: ${{ steps.deploy-pr.outputs.url }}
+      TEST_URL: ${{ steps.deploy-pr.outputs.url }}
     environment:
       name: pr-${{ github.event.number }}
       url: ${{ steps.deploy-pr.outputs.url }}
-    # Only run one deployment at a time per PR.
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.11.0
@@ -97,9 +96,9 @@ jobs:
 
       - name: Run functional test on saucelabs
         env:
-          FLY_IO_URL: ${{needs.deploy_flyio.outputs.FLY_IO_URL}}
+          TEST_URL: ${{needs.deploy_flyio.outputs.TEST_URL}}
         run: |
-          echo FLY_IO_URL=$FLY_IO_URL
+          echo TEST_URL=$TEST_URL
           npm run ci-functional
 
       - name: Generate functional test allure report
@@ -179,7 +178,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/github-script@v6
         env:
-          TEST_URL: ${{needs.deploy_flyio.outputs.FLY_IO_URL}}
+          TEST_URL: ${{needs.deploy_flyio.outputs.TEST_URL}}
           DATE: ${{ steps.get-date.outputs.DATE }}
         with:
           script: |
