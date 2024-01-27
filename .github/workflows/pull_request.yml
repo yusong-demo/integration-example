@@ -196,6 +196,11 @@ jobs:
           check_for_duplicate_msg: true
           delete_prev_regex_msg: "Build Result"
 
+      - name: Add job summary
+        if: ${{ always() }}
+        run: |
+          echo "${{ env.BUILD_COMMENT }}" >> $GITHUB_STEP_SUMMARY
+
       - name: Last check build status
         if: ${{ always() }}
         uses: actions/github-script@v6
