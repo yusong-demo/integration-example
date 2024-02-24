@@ -1,3 +1,3 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"failed","Wed Feb 21 02:22:18 UTC 2024","Wed Feb 21 02:22:19 UTC 2024","723","","[undefined] test local:","","[undefined] test local:","test localhost content","test localhost content",""
-"failed","Wed Feb 21 02:22:18 UTC 2024","Wed Feb 21 02:22:18 UTC 2024","25","","[undefined] test func:","","[undefined] test func:","test element exist 功能 ? && func","test element exist 功能 ? && func",""
+"failed","Sat Feb 24 02:20:09 UTC 2024","Sat Feb 24 02:20:10 UTC 2024","719","","[undefined] test local:","","[undefined] test local:","test localhost content","test localhost content",""
+"failed","Sat Feb 24 02:20:09 UTC 2024","Sat Feb 24 02:20:09 UTC 2024","27","","[undefined] test func:","","[undefined] test func:","test element exist 功能 ? && func","test element exist 功能 ? && func",""
